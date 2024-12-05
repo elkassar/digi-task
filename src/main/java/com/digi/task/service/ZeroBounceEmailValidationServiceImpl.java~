@@ -1,0 +1,38 @@
+package com.digi.task.service;
+
+import com.digi.task.exception.InvalildInputException;
+import com.zerobounce.ErrorResponse;
+import com.zerobounce.ZBValidateResponse;
+import com.zerobounce.ZBValidateStatus;
+import com.zerobounce.ZeroBounceSDK;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jmx.access.InvalidInvocationException;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Data
+@Service
+public class ZeroBounceEmailValidationServiceImpl implements EmailValidationService {
+
+    @Value("${app.zerobounce-api-key}")
+    private String zeroBounceApiKey;
+
+    @Override
+    public void checkEmailValidity(String email) {
+        ZeroBounceSDK.getInstance().initialize(zeroBounceApiKey);
+
+        ZeroBounceSDK.getInstance().validate(
+                email,null,
+                response -> {
+                    if (!ZBValidateStatus.VALID.equals(response.getStatus())) {
+                        throw new InvalildInputException(List.of("email"));
+                    }
+                },
+                errorResponse -> {
+                    throw new InvalildInputException(List.of("email"));
+                });
+    }
+}
